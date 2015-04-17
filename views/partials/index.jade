@@ -1,2 +1,41 @@
 block content
-  h1 {{message}}
+  
+  .row
+    .col-md-6
+      h1 {{message}}
+      table.table-striped.table-condensed
+        tr
+          th id
+          th vendor
+          th name
+          th purchaseValue
+          th appraisalValue
+          th actions
+        tr(ng-repeat = "i in inventory")
+          td {{i._id}}
+          td {{i.vendor}}
+          td {{i.name}}
+          td {{i.purchaseValue | currency}}
+          td {{i.appraisalValue | currency}}
+          td 
+            a.btn.btn-primary(href = '' ng-click = 'edit($index)') Edit
+    .col-md-3(ng-show = "editing")
+      h1 Editing!
+      form
+        .form-group
+          label id
+          input.form-control(ng-model="item._id" readonly)
+        .form-group
+          label vendor
+          input.form-control(ng-model="item.vendor")
+        .form-group
+          label name
+          input.form-control(ng-model = "item.name")
+        .form-group
+          label Purchase Cost
+          input.form-control(type = "number" ng-model = 'item.purchaseValue')
+        .form-group
+          label Appraisal Value
+          input.form-control(type="number" ng-model = "item.appraisalValue")
+        .form-group
+          a.form-control.btn-primary(href = '' ng-click = 'finishEditing()') Done
