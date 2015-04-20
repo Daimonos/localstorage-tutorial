@@ -10,18 +10,43 @@ app.config(['$routeProvider', '$locationProvider', '$httpProvider',
     .otherwise({
       redirectTo:'/'
     })
+  }]);
+
+app.config(['localStorageServiceProvider', function(localStorageServiceProvider){  
+  localStorageServiceProvider.setPrefix('myLocalStorageApp');
 }]);
 
-app.controller('MainCtrl', ['$scope','$http', function($scope, $http){
-	$scope.message = 'Check out this inventory';
-  //get us some datas
-  $http.get('/inventory')
-  .success(function(data, status, headers, config){
-    $scope.inventory = data;
-  })
-  .error(function(data, status, headers, config){
-    $scope.message = 'Something exploded! '+data.message;
-  });
+app.controller('MainCtrl', ['$scope','$http', 'localStorageService',  
+  function($scope, $http, localStorageService){
+    var getInventoryFromServer = function(){
+    $http.get('/inventory') //get us some datas
+    .success(function(data, status, headers, config){
+      $scope.message = 'Check out this inventory';
+      $scope.inventory = data;
+      localStorageService.set('inventory', $scope.inventory);
+    })
+    .error(function(data, status, headers, config){
+      $scope.message = 'Something exploded! '+data.message;
+    });   
+  }
+
+
+  if(!localStorageService.isSupported){
+    $scope.message = 'Your browser does not support localStorage. This app wont work offline!';
+  }
+  else{  
+    //check to see if our inventory is stored in local storage.
+    console.log('Checking local storage');
+    $scope.inventory = localStorageService.get('inventory');
+
+    if(!$scope.inventory){
+      console.log('There is no inventory in your localStorage. Requesting Inventory from Srever');
+      getInventoryFromServer();
+    }
+    else{
+      $scope.message = 'We found some data in your localStorage. Here it is!'
+    }
+  }
 
   //scope helper functions
   $scope.edit = function(index){
@@ -32,4 +57,13 @@ app.controller('MainCtrl', ['$scope','$http', function($scope, $http){
     $scope.editing = false;
     $scope.item = {};
   }
-}]);
+  $scope.removeLocalStorage = function(){
+    localStorageService.remove('inventory');
+    console.log('Cleared the local storage');
+     getInventoryFromServer();
+    }
+    $scope.$watch('inventory', function(){
+      console.log('Inventory Changed');
+      localStorageService.set('inventory', $scope.inventory);
+    }, true);
+  }]);
